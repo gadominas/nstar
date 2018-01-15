@@ -9,13 +9,13 @@ public class NStar : MonoBehaviour {
   public GameObject selectedSprite;
   public GameObject starSprite;
 
-  private ArrayList parentStars = new ArrayList();
+  private NStar parentStar;
   private ArrayList childStars = new ArrayList();
 
   private float starPositionInBubble;
   private Vector3 starPosition = new Vector3();
   private bool selected = false;
-  private bool highlight = false;
+  public bool highlight = false;
 
   private Color normalStartColor;
   private Color normalEndColor;
@@ -25,11 +25,14 @@ public class NStar : MonoBehaviour {
   public void join(NStar parent) {
     starPositionInBubble = Random.Range(0, 360);
 
-    if (parent != null) {
-      parent.setUnSelected();
-      parent.setChild(this);
+    // one time setup of parent
+    if (parentStar == null && parent != null) {
+      parentStar = parent;
+    } 
 
-      parentStars.Add(parent);
+    if (parentStar != null) {
+      parentStar.setUnSelected();
+      parentStar.setChild(this);
     }
   }
 
@@ -50,11 +53,13 @@ public class NStar : MonoBehaviour {
   public void clearHighlightFromParentBranch() {
     highlight = false;
 
-    if (parentStars.Count > 0) {
-      foreach (NStar star in parentStars) {
-        star.clearHighlightFromParentBranch();
-      }
+    if (parentStar != null) {
+      parentStar.clearHighlightFromParentBranch();
     }
+  }
+
+  public bool isOverlapPoint(Vector3 point) {
+    return starCollider.OverlapPoint(point);
   }
 
   public Vector3 getStarPosition() {
@@ -78,10 +83,10 @@ public class NStar : MonoBehaviour {
   }
 
   void Start() {
-    normalStartColor = lineRenderer.startColor;
-    normalEndColor = lineRenderer.endColor;
+    normalStartColor = Color.white;
+    normalEndColor = Color.gray;
 
-    highlightStartColor = Color.blue;
+    highlightStartColor = Color.white;
     highlightEndColor = Color.green;
   }
 
@@ -94,50 +99,31 @@ public class NStar : MonoBehaviour {
   }
 
   void Update() {
-    if (Input.GetMouseButtonDown(0)) {
-      Vector2 touchPoint = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
-      Vector3 worldPoint = Camera.main.ScreenToWorldPoint(touchPoint);
-
-      bool overlaped = starCollider.OverlapPoint(worldPoint);
-      highlightIfOverlaps(overlaped);
-      selectIfOverlaps(overlaped);
-    }
-
     selectedSprite.SetActive(selected);
-  }
-
-  private void highlightIfOverlaps(bool overlaped) {
-    if (overlaped) {
-      clearHighlightFromParentBranch();
-      highlightChildBranch();
-    }
-
-    highlightConnections();
-  }
-
-  private void selectIfOverlaps(bool overlaped) {
-    selected = overlaped;
   }
 
   void FixedUpdate() {
     updateConnections();
+    highlightConnections();
     starSprite.transform.position = getStarPosition();
   }
 
   private void updateConnections() {
-    if (parentStars.Count > 0) {
+    if (childStars.Count > 0 && highlight) {
       int lineCount = 0;
 
-      foreach (NStar star in parentStars) {
+      foreach (NStar star in childStars) {
         lineCount += 2;
         lineRenderer.positionCount = lineCount;
-        lineRenderer.SetPosition(lineCount -2, getStarPosition());
-        lineRenderer.SetPosition(lineCount -1, star.getStarPosition());
+        lineRenderer.SetPosition(lineCount - 2, getStarPosition());
+        lineRenderer.SetPosition(lineCount - 1, star.getStarPosition());
       }
+    } else {
+      lineRenderer.positionCount = 0;
     }
   }
 
-  private void highlightConnections(){
+  private void highlightConnections() {
     if (highlight) {
       lineRenderer.startColor = highlightStartColor;
       lineRenderer.endColor = highlightEndColor;
