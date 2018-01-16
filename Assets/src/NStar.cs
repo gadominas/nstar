@@ -109,7 +109,7 @@ public class NStar : MonoBehaviour {
   }
 
   private void updateConnections() {
-    if (childStars.Count > 0 && highlight) {
+    if (childStars.Count > 0) {
       int lineCount = 0;
 
       foreach (NStar star in childStars) {
@@ -117,6 +117,13 @@ public class NStar : MonoBehaviour {
         lineRenderer.positionCount = lineCount;
         lineRenderer.SetPosition(lineCount - 2, getStarPosition());
         lineRenderer.SetPosition(lineCount - 1, star.getStarPosition());
+      }
+
+      if (highlight) {
+        lineRenderer.startWidth = 3;
+        lineRenderer.endWidth = 0;
+      } else {
+        lineRenderer.startWidth = lineRenderer.endWidth = 0.5f;
       }
     } else {
       lineRenderer.positionCount = 0;
