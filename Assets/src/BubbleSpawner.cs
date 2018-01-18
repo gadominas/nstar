@@ -15,6 +15,8 @@ public class BubbleSpawner : MonoBehaviour {
 
   private GameObject universeCenter;
   private GameObject pt;
+
+  private int numberOfStellarSystems = 1;
   #endif
 
   public float STAR_BUBBLE_RADIUS = 5.0f;
@@ -38,6 +40,8 @@ public class BubbleSpawner : MonoBehaviour {
   private Vector3 universeCenterPoint = new Vector3();
  
   private float angleForNewPosition = .0f;
+  private float radiusForNewPosition = 100.0f;
+
   private bool stellarSystemPreparedToCreate = false;
 
   private NStar parentStar;
@@ -59,19 +63,24 @@ public class BubbleSpawner : MonoBehaviour {
   }
 
   void Update() {
-    if (Input.GetKeyUp(KeyCode.S)) {
+    if (Input.GetKeyUp(KeyCode.S) || Input.GetKey(KeyCode.B)) {
       spawnBuble();
 
       #if DEBUG
-      starPopulation.text = "# of stars: " + starMap.Count.ToString();
+      starPopulation.text = "# of stars: [" + starMap.Count.ToString() + "] // # of stellars: [" + numberOfStellarSystems + "]";
       #endif
     } else if (Input.GetMouseButtonDown(0)) {
+      #if DEBUG
       createNewStellarSytem();
+      numberOfStellarSystems++;
     }
 
-    if (Input.GetKey(KeyCode.R)) {
-      
+    if (Input.GetKeyUp(KeyCode.R)) {
+      selectRandomStar();
+      stellarSystemPreparedToCreate = true;
+      numberOfStellarSystems++;
     }
+    #endif
 
     updateUniverseBoundaryMeta();
     #if DEBUG
@@ -109,25 +118,62 @@ public class BubbleSpawner : MonoBehaviour {
     if (stellarSystemPreparedToCreate) {
       deltaPos = getNextStellarSystemPosition(deltaPos);
       pt.transform.position = deltaPos;
+      angleForNewPosition = .0f;
+      radiusForNewPosition = 100.0f;
     } 
 
-    newPosition.x = deltaPos.x + STAR_BUBBLE_RADIUS * Mathf.Cos(angleForNewPosition);
-    newPosition.y = deltaPos.y + STAR_BUBBLE_RADIUS * Mathf.Sin(angleForNewPosition);
+    newPosition.x = deltaPos.x + radiusForNewPosition * Mathf.Cos(Random.Range(angleForNewPosition - .2f, angleForNewPosition + .2f));
+    newPosition.y = deltaPos.y + radiusForNewPosition * Mathf.Sin(angleForNewPosition);
 
-    angleForNewPosition += 10.0f;
+    angleForNewPosition += 0.5f;
+    radiusForNewPosition -= 1.5f;
 
     return newPosition;
   }
 
   private Vector3 getNextStellarSystemPosition(Vector3 starPosition) {
-    float d1 = Vector3.Distance(starPosition, universeBound.min);
-    float d2 = Vector3.Distance(starPosition, universeBound.max);
+    Vector3 minimumDistanceHitPt = new Vector3();
 
-    if (d1 > d2) {
-      return universeBound.max;
+    Vector3 topHit = nearestPointOnFiniteLine(getUniverseTopLeft(), getUniverseTopRight(), starPosition);
+    Vector3 bottomHit = nearestPointOnFiniteLine(getUniverseBottomLeft(), getUniverseBottomRight(), starPosition);
+    Vector3 leftHit = nearestPointOnFiniteLine(getUniverseTopLeft(), getUniverseBottomLeft(), starPosition);
+    Vector3 rightHit = nearestPointOnFiniteLine(getUniverseTopRight(), getUniverseBottomRight(), starPosition);
+
+    print((int)Vector3.Distance(starPosition, topHit));
+    print((int)Vector3.Distance(starPosition, bottomHit));
+    print((int)Vector3.Distance(starPosition, leftHit));
+    print((int)Vector3.Distance(starPosition, rightHit));
+
+    float minDistance = Mathf.Min(Vector3.Distance(starPosition, topHit),
+                          Mathf.Min(Vector3.Distance(starPosition, bottomHit),
+                            Mathf.Min(Vector3.Distance(starPosition, leftHit),
+                              Mathf.Min(Vector3.Distance(starPosition, rightHit)))));
+
+
+    Dictionary<int,Vector3> hitPoints = 
+      getHitPoint(starPosition, new Vector3[]{ topHit, bottomHit, leftHit, rightHit });
+    
+    if (hitPoints.TryGetValue(((int)minDistance), out minimumDistanceHitPt)) {
+      Vector3 heading = minimumDistanceHitPt - universeBound.center;
+      //heading = heading + 10.0f;
+      return starPosition + heading;
     } else {
-      return universeBound.min;
+      return starPosition;
     }
+  }
+
+  private Dictionary<int,Vector3> getHitPoint(Vector3 starPosition, Vector3[] hitPoints) {
+    Dictionary<int,Vector3> hitPointsSet = new Dictionary<int,Vector3>();
+
+    foreach (Vector3 pt in hitPoints) {
+      int distance = (int)Vector3.Distance(starPosition, pt);
+
+      if (!hitPointsSet.ContainsKey(distance)) {
+        hitPointsSet.Add(distance, pt);
+      }
+    }
+
+    return hitPointsSet;
   }
 
   private NStar getSelected() {
@@ -195,14 +241,41 @@ public class BubbleSpawner : MonoBehaviour {
     ryVector.Set(vrx + STAR_BUBBLE_RADIUS, vry - STAR_BUBBLE_RADIUS, .0f);
   }
 
+  private Vector3 nearestPointOnFiniteLine(Vector3 start, Vector3 end, Vector3 pnt) {
+    var line = (end - start);
+    var len = line.magnitude;
+    line.Normalize();
+
+    var v = pnt - start;
+    var d = Vector3.Dot(v, line);
+    d = Mathf.Clamp(d, 0f, len);
+    return start + line * d;
+  }
+
+  private Vector3 getUniverseTopLeft() {
+    return universeBound.min;
+  }
+
+  private Vector3 getUniverseBottomRight() {
+    return universeBound.max;
+  }
+
+  private Vector3 getUniverseTopRight() {
+    return new Vector3(getUniverseBottomRight().x, getUniverseTopLeft().y);
+  }
+
+  private Vector3 getUniverseBottomLeft() {
+    return new Vector3(getUniverseTopLeft().x, getUniverseBottomRight().y);
+  }
+
   #if DEBUG
-  private void selectRandomStar(){
+  private void selectRandomStar() {
     foreach (NStar star in starMap) {
       star.setUnSelected();
       star.clearHighlightFromParentBranch();
     }
 
-    starMap[0]
+    ((NStar)starMap[Random.Range(0, starMap.Count - 1)]).setSelected();
   }
 
   private void updateCamera() {
@@ -228,15 +301,10 @@ public class BubbleSpawner : MonoBehaviour {
   }
 
   private void drawGizmoAroundBound(Bounds bound) {
-    Vector3 ptTopLeft = bound.min;
-    Vector3 ptBottomRight = bound.max;
-    Vector3 ptTopRight = new Vector3(ptBottomRight.x, ptTopLeft.y);
-    Vector3 ptBottomLeft = new Vector3(ptTopLeft.x, ptBottomRight.y);
-
-    Debug.DrawLine(ptTopLeft, ptTopRight, Color.green);
-    Debug.DrawLine(ptTopRight, ptBottomRight, Color.green);
-    Debug.DrawLine(ptBottomRight, ptBottomLeft, Color.green);
-    Debug.DrawLine(ptBottomLeft, ptTopLeft, Color.green);
+    Debug.DrawLine(getUniverseTopLeft(), getUniverseTopRight(), Color.green);
+    Debug.DrawLine(getUniverseTopRight(), getUniverseBottomRight(), Color.green);
+    Debug.DrawLine(getUniverseBottomRight(), getUniverseBottomLeft(), Color.green);
+    Debug.DrawLine(getUniverseBottomLeft(), getUniverseTopLeft(), Color.green);
   }
   #endif
 }
