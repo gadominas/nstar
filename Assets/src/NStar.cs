@@ -143,7 +143,7 @@ public class NStar : MonoBehaviour {
     selectedSprite.SetActive(selected);
     currentSprite.SetActive(current);
     visitedSprite.SetActive(visited);
-    starInfoDialog.SetActive(selected);
+    //starInfoDialog.SetActive(selected);
   }
 
   void FixedUpdate() {
@@ -164,7 +164,7 @@ public class NStar : MonoBehaviour {
       }
 
       if (highlight) {
-        lineRenderer.startWidth = 3;
+        lineRenderer.startWidth = 10;
         lineRenderer.endWidth = 0;
       } else {
         lineRenderer.startWidth = 2.0f;

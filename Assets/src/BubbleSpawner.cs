@@ -20,7 +20,9 @@ public class BubbleSpawner : MonoBehaviour {
   #endif
 
   public float STAR_BUBBLE_RADIUS = 5.0f;
+
   public GameObject bubble;
+  public GameObject blurMask;
  
   private float vlx = .0f;
   private float vly = .0f;
@@ -71,9 +73,6 @@ public class BubbleSpawner : MonoBehaviour {
       starPopulation.text = "# of stars: [" + starMap.Count.ToString() + "]";
     } else if (Input.GetMouseButtonDown(0)) {
       createNewStellarSytem();
-
-      Vector3 newCamPos = getSelected().getStarPosition();
-      Camera.main.transform.position = new Vector3(newCamPos.x, newCamPos.y, -10.0f);
     }
 
     if (Input.GetKeyUp(KeyCode.R)) {
@@ -100,13 +99,19 @@ public class BubbleSpawner : MonoBehaviour {
 
     #if DEBUG
     updateUniverseBoundMarker();
+    #endif
+  }
+
+  void FixedUpdate() {
+    #if DEBUG
     updateCamera();
     #endif
   }
 
   private void spawnStar(StarInfo starInfo) {
     currentStar = Instantiate(bubble, transform).GetComponent<NStar>();
-    starMap.Add(starInfo.starId,currentStar.GetComponent<NStar>());
+    randomScale(currentStar.transform);
+    starMap.Add(starInfo.starId, currentStar.GetComponent<NStar>());
 
     NStar currentSelectedStar = getSelected();
     Vector3 currentStarPosition = new Vector3();
@@ -120,6 +125,11 @@ public class BubbleSpawner : MonoBehaviour {
     parentStar = currentStar;
 
     stellarSystemPreparedToCreate = false;
+  }
+
+  private void randomScale(Transform transform) {
+    float randomScaleFactor = Random.Range(0.7f, 2.0f);
+    transform.localScale = new Vector3(randomScaleFactor, randomScaleFactor, randomScaleFactor);
   }
 
   private void createNewStellarSytem() {
@@ -194,12 +204,12 @@ public class BubbleSpawner : MonoBehaviour {
     return parentStar;
   }
 
-  private void setCurrentStar(string starId){
+  private void setCurrentStar(string starId) {
     NStar starToBePromoted = null;
 
-    if( starMap.TryGetValue(starId, out starToBePromoted) ){
-      foreach(NStar star in starMap.Values){
-        if( star.isCurrent() ){
+    if (starMap.TryGetValue(starId, out starToBePromoted)) {
+      foreach (NStar star in starMap.Values) {
+        if (star.isCurrent()) {
           star.clearCurrent();
         }
       }
@@ -306,15 +316,21 @@ public class BubbleSpawner : MonoBehaviour {
         return;
       }
     }
-
   }
 
   private void updateCamera() {
     if (universeRadius > .0f) {
-      if (universeRadius > 100.0f) {
+      blurMask.transform.position = new Vector3(universeBound.center.x, universeBound.center.y, .0f);
+      float maskScaleFactor = Camera.main.orthographicSize / 7.0f;
+      blurMask.transform.localScale = new Vector2(maskScaleFactor, maskScaleFactor);
+
+      Camera.main.transform.position = 
+        new Vector3(universeBound.center.x, universeBound.center.y, -10.0f);
+
+      if (universeRadius > 200.0f) {
         Camera.main.orthographicSize = universeRadius;
       } else {
-        Camera.main.orthographicSize = 100.0f;
+        Camera.main.orthographicSize = 200.0f;
       }
     }
   }
@@ -337,12 +353,12 @@ public class BubbleSpawner : MonoBehaviour {
     Debug.DrawLine(getUniverseBottomLeft(), getUniverseTopLeft(), Color.green);
   }
 
-  private void prepareNewStellarSystem(){
+  private void prepareNewStellarSystem() {
     selectRandomStar();
     stellarSystemPreparedToCreate = true;
   }
 
-  private void mockSpawnStars(){
+  private void mockSpawnStars() {
     int index = 0;
     string starSeedId = null;
 
