@@ -7,14 +7,21 @@ public class NStar : MonoBehaviour {
   public CircleCollider2D starCollider;
 
   public GameObject selectedSprite;
+  public GameObject visitedSprite;
+  public GameObject currentSprite;
   public GameObject starSprite;
+  public GameObject starInfoDialog;
 
   private NStar parentStar;
   private ArrayList childStars = new ArrayList();
 
   private float starPositionInBubble;
   private Vector3 starPosition = new Vector3();
+
+  // main states of the star
   private bool selected = false;
+  private bool current = false;
+  private bool visited = false;
   public bool highlight = false;
 
   private Color normalStartColor;
@@ -22,7 +29,10 @@ public class NStar : MonoBehaviour {
   private Color highlightStartColor;
   private Color highlightEndColor;
 
-  public void join(NStar parent) {
+  private StarInfo starInfo;
+
+  public void join(NStar parent, StarInfo starInfo) {
+    this.starInfo = starInfo;
     starPositionInBubble = Random.Range(0, 360);
 
     // one time setup of parent
@@ -31,7 +41,7 @@ public class NStar : MonoBehaviour {
     } 
 
     if (parentStar != null) {
-      parentStar.setUnSelected();
+      parentStar.clearSelected();
       parentStar.setChild(this);
     }
   }
@@ -70,11 +80,12 @@ public class NStar : MonoBehaviour {
     return starCollider.radius;
   }
 
+  // selected status
   public void setSelected() {
     selected = true;
   }
 
-  public void setUnSelected() {
+  public void clearSelected() {
     selected = false;
   }
 
@@ -82,8 +93,38 @@ public class NStar : MonoBehaviour {
     return selected;
   }
 
+  // current status
+  public void setCurrent(){
+    current = true;
+  }
+
+  public void clearCurrent(){
+    current = false;
+  }
+
+  public bool isCurrent(){
+    return current;
+  }
+
+  // visited status
+  public bool isVisited(){
+    return visited;
+  }
+
+  public void setVisited(){
+    visited = true;
+  }
+
+  public override string ToString(){
+    return starInfo.ToString();
+  }
+
+  public string getStarId(){
+    return starInfo.starId;
+  }
+
   void Start() {
-    normalStartColor = Color.white;
+    normalStartColor = Color.gray;
     normalEndColor = Color.gray;
 
     highlightStartColor = Color.white;
@@ -100,6 +141,9 @@ public class NStar : MonoBehaviour {
 
   void Update() {
     selectedSprite.SetActive(selected);
+    currentSprite.SetActive(current);
+    visitedSprite.SetActive(visited);
+    starInfoDialog.SetActive(selected);
   }
 
   void FixedUpdate() {
@@ -109,7 +153,7 @@ public class NStar : MonoBehaviour {
   }
 
   private void updateConnections() {
-    if (childStars.Count > 0) {
+    if (childStars.Count > 0 && visited) {
       int lineCount = 0;
 
       foreach (NStar star in childStars) {
@@ -123,7 +167,8 @@ public class NStar : MonoBehaviour {
         lineRenderer.startWidth = 3;
         lineRenderer.endWidth = 0;
       } else {
-        lineRenderer.startWidth = lineRenderer.endWidth = 0.5f;
+        lineRenderer.startWidth = 2.0f;
+        lineRenderer.endWidth = 1.0f;
       }
     } else {
       lineRenderer.positionCount = 0;
