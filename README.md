@@ -10,8 +10,8 @@ Features to have:
 
 # V.2
 ![Alt text](gitres/starMap_poc2.png)
-(https://youtu.be/aykxrYWgAYg)
+![Alt text](https://youtu.be/aykxrYWgAYg)
 
 # V.1
 ![Alt text](gitres/starMap_poc1.png)
-(https://youtu.be/_tsJqc54pJM)
+![Alt text](https://youtu.be/_tsJqc54pJM)
