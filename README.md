@@ -1,5 +1,6 @@
 # nstar
 SaviorX StarMap
+Game landing page: http://saviorx.com
 
 Features to have:
     * Generate stellar with non-overlaping stars
@@ -9,6 +10,8 @@ Features to have:
 
 # V.2
 ![Alt text](gitres/starMap_poc2.png)
+In action: https://youtu.be/aykxrYWgAYg
 
 # V.1
 ![Alt text](gitres/starMap_poc1.png)
+In action: https://youtu.be/_tsJqc54pJM
