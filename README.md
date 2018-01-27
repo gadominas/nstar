@@ -1,2 +1,4 @@
 # nstar
-Starmap generation solution for Unity3D
+SaviorX StarMap
+
+![Alt text](gitres/starMap_poc2.png)
