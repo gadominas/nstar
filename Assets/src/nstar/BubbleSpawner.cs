@@ -17,6 +17,7 @@ public class BubbleSpawner : MonoBehaviour {
 
   private GameObject universeCenter;
   private GameObject pt;
+  private NStar selectedStar = null;
   #endif
 
   public float STAR_BUBBLE_RADIUS = 5.0f;
@@ -223,7 +224,6 @@ public class BubbleSpawner : MonoBehaviour {
   private void updateStarMap() {
     Vector2 touchPoint = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
     Vector3 worldPoint = Camera.main.ScreenToWorldPoint(touchPoint);
-    NStar selectedStar = null;
 
     bool overlaped = false;
 
@@ -320,18 +320,24 @@ public class BubbleSpawner : MonoBehaviour {
 
   private void updateCamera() {
     if (universeRadius > .0f) {
-      blurMask.transform.position = new Vector3(universeBound.center.x, universeBound.center.y, .0f);
-      float maskScaleFactor = Camera.main.orthographicSize / 7.0f;
-      blurMask.transform.localScale = new Vector2(maskScaleFactor, maskScaleFactor);
-
-      Camera.main.transform.position = 
-        new Vector3(universeBound.center.x, universeBound.center.y, -10.0f);
+      if (selectedStar != null) {
+        Camera.main.GetComponent<CameraFluidMove>().moveCameraTo(
+          new Vector3(selectedStar.getStarPosition().x, selectedStar.getStarPosition().y, -10.0f));
+      } else {
+        Camera.main.GetComponent<CameraFluidMove>().moveCameraTo(
+          new Vector3(currentStar.getStarPosition().x, currentStar.getStarPosition().y, -10.0f));
+      }
 
       if (universeRadius > 200.0f) {
         Camera.main.orthographicSize = universeRadius;
       } else {
         Camera.main.orthographicSize = 200.0f;
       }
+
+      //blurMask.transform.position = new Vector3(universeBound.center.x, universeBound.center.y, .0f);
+      blurMask.transform.position = new Vector3(Camera.main.transform.position.x, Camera.main.transform.position.y, .0f);
+      float maskScaleFactor = Camera.main.orthographicSize / 7.0f;
+      blurMask.transform.localScale = new Vector2(maskScaleFactor, maskScaleFactor);
     }
   }
 

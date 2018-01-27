@@ -124,10 +124,10 @@ public class NStar : MonoBehaviour {
   }
 
   void Start() {
-    normalStartColor = Color.gray;
-    normalEndColor = Color.gray;
+    normalStartColor = Color.white;
+    normalEndColor = Color.green;
 
-    highlightStartColor = Color.white;
+    highlightStartColor = Color.red;
     highlightEndColor = Color.green;
   }
 
@@ -164,11 +164,11 @@ public class NStar : MonoBehaviour {
       }
 
       if (highlight) {
-        lineRenderer.startWidth = 10;
-        lineRenderer.endWidth = 0;
+        lineRenderer.startWidth = Camera.main.orthographicSize / 50.0f;
+        lineRenderer.endWidth = Camera.main.orthographicSize / 50.0f;
       } else {
-        lineRenderer.startWidth = 2.0f;
-        lineRenderer.endWidth = 1.0f;
+        lineRenderer.startWidth = Camera.main.orthographicSize / 120.0f;
+        lineRenderer.endWidth = Camera.main.orthographicSize / 100.0f;
       }
     } else {
       lineRenderer.positionCount = 0;
